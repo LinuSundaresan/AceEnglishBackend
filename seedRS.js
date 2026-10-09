@@ -7,7 +7,7 @@ const Question = require('./models/Question');
 
 dotenv.config();
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/ptetool';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://linusundaresan_db_user:kgOWInL6QDDj6RpC@ace-english-prod.tnd9kqi.mongodb.net/ptetool';
 
 const sentences = [
   "Please make sure you have printed your ticket before arriving at the station.",
@@ -32,7 +32,7 @@ const seedRepeatSentences = async () => {
       const sentence = sentences[i];
       const filename = `rs_seed_${Date.now()}_${i}.wav`;
       const filepath = path.join(folder, filename);
-      
+
       const psScript = `
         Add-Type -AssemblyName System.Speech;
         $speak = New-Object System.Speech.Synthesis.SpeechSynthesizer;
@@ -46,7 +46,7 @@ const seedRepeatSentences = async () => {
 
       console.log(`Generating audio for: "${sentence}"`);
       execSync(`powershell -ExecutionPolicy Bypass -File ${psScriptPath}`);
-      
+
       fs.unlinkSync(psScriptPath); // clean up
 
       const audioUrl = `http://localhost:${process.env.PORT || 5000}/uploads/questions/repeat_sentence/${filename}`;
@@ -57,8 +57,8 @@ const seedRepeatSentences = async () => {
         content: sentence,
         audioUrl: audioUrl
       });
-      
-      console.log(`Saved question ${i+1}`);
+
+      console.log(`Saved question ${i + 1}`);
     }
 
     console.log('Successfully seeded Repeat Sentence questions with audio!');
