@@ -3,7 +3,7 @@ const Question = require('./models/Question');
 const dotenv = require('dotenv');
 
 dotenv.config();
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/ptetool';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://linusundaresan_db_user:kgOWInL6QDDj6RpC@ace-english-prod.tnd9kqi.mongodb.net/ptetool';
 
 const seedQuestions = [
   { moduleType: 'speaking', questionType: 'Read Aloud', content: 'The quick brown fox jumps over the lazy dog. This is a classic sentence used to demonstrate all the letters of the English alphabet.' },

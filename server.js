@@ -25,7 +25,7 @@ app.use('/api/settings', settingsRoutes);
 
 // Connect to MongoDB
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/ptetool';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://linusundaresan_db_user:kgOWInL6QDDj6RpC@ace-english-prod.tnd9kqi.mongodb.net/ptetool';
 
 mongoose.connect(MONGO_URI)
   .then(() => {
