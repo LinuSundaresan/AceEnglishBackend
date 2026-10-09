@@ -49,7 +49,8 @@ const seedRepeatSentences = async () => {
 
       fs.unlinkSync(psScriptPath); // clean up
 
-      const audioUrl = `http://localhost:${process.env.PORT || 5000}/uploads/questions/repeat_sentence/${filename}`;
+      const baseUrl = process.env.LIVE_URL || `http://localhost:${process.env.PORT || 5000}`;
+      const audioUrl = `${baseUrl}/uploads/questions/repeat_sentence/${filename}`;
 
       await Question.create({
         moduleType: 'speaking',

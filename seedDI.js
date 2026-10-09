@@ -95,7 +95,8 @@ const seedDescribeImages = async () => {
       console.log(`Downloading image for: "${q.title}"`);
       await downloadImage(q.url, filepath);
 
-      const imageUrl = `http://localhost:${process.env.PORT || 5000}/uploads/questions/describe_image/${filename}`;
+      const baseUrl = process.env.LIVE_URL || `http://localhost:${process.env.PORT || 5000}`;
+      const imageUrl = `${baseUrl}/uploads/questions/describe_image/${filename}`;
 
       await Question.create({
         moduleType: 'speaking',
