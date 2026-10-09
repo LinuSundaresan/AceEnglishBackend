@@ -94,7 +94,8 @@ router.post('/', upload.single('audio'), async (req, res) => {
     
     if (req.file) {
       // If S3, req.file.location contains URL. If local, construct a local URL.
-      attemptData.audioUrl = req.file.location || `http://localhost:${process.env.PORT || 5000}/${req.file.destination}${req.file.filename}`;
+      const baseUrl = process.env.LIVE_URL || `http://localhost:${process.env.PORT || 5000}`;
+      attemptData.audioUrl = req.file.location || `${baseUrl}/${req.file.destination}${req.file.filename}`;
     }
 
     const attempt = await Attempt.create(attemptData);
