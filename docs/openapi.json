@@ -1,0 +1,834 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "PTE Practice Platform API Documentation",
+    "version": "1.0.0",
+    "description": "Comprehensive interactive API documentation for the PTE (Pearson Test of English) Training & Practice Platform. This documentation supports live testing of all endpoints directly in the browser with parameter inputs, authentication, multipart media uploads, and detailed response schemas.\n\n### Developer Workflow\n1. **Authenticate**: Register or Login via `/api/auth/login` to obtain your Bearer JWT token.\n2. **Fetch Questions**: Retrieve module-specific questions via `/api/questions?moduleType=reading`.\n3. **Record Attempt**: POST practice results with scoring details and optional audio to `/api/attempts`.\n4. **Monitor Progress**: Query aggregated user analytics via `/api/attempts/analytics/user/:userId`.",
+    "contact": {
+      "name": "Ace English Dev Team",
+      "url": "https://aceenglishbackend.onrender.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000",
+      "description": "Local Development Server"
+    },
+    {
+      "url": "https://aceenglishbackend.onrender.com",
+      "description": "Production Render Server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "User registration, sign-in, and account management"
+    },
+    {
+      "name": "Questions",
+      "description": "PTE Question Bank covering Speaking, Writing, Reading, and Listening modules"
+    },
+    {
+      "name": "Attempts & Scoring",
+      "description": "Practice attempt submissions, audio file uploads, and historical attempts"
+    },
+    {
+      "name": "Analytics & Progress",
+      "description": "User performance statistics, AlfaPTE & APEUni module progress, daily goals, and exam readiness"
+    },
+    {
+      "name": "Settings & Branding",
+      "description": "Custom client logo management and branding assets"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Enter your JWT token obtained from `/api/auth/login` or `/api/auth/register`"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "651a2b3c4d5e6f7a8b9c0d1e" },
+          "name": { "type": "string", "example": "John Doe" },
+          "email": { "type": "string", "format": "email", "example": "john@example.com" },
+          "role": { "type": "string", "enum": ["user", "admin"], "example": "user" },
+          "isPro": { "type": "boolean", "example": false },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "651a2b3c4d5e6f7a8b9c0d1e" },
+          "name": { "type": "string", "example": "John Doe" },
+          "email": { "type": "string", "example": "john@example.com" },
+          "role": { "type": "string", "example": "user" },
+          "isPro": { "type": "boolean", "example": false },
+          "token": { "type": "string", "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." }
+        }
+      },
+      "BlankItem": {
+        "type": "object",
+        "properties": {
+          "index": { "type": "integer", "example": 0 },
+          "correctAnswer": { "type": "string", "example": "established" },
+          "options": {
+            "type": "array",
+            "items": { "type": "string" },
+            "example": ["established", "demolished", "initiated", "relocated"]
+          },
+          "explanation": { "type": "string", "example": "Collocation: 'firmly established in the market'." }
+        }
+      },
+      "ParagraphItem": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "p1" },
+          "text": { "type": "string", "example": "Solar power has witnessed unprecedented growth in recent decades." },
+          "order": { "type": "integer", "example": 1 }
+        }
+      },
+      "Question": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "660c1d2e3f4a5b6c7d8e9f01" },
+          "moduleType": {
+            "type": "string",
+            "enum": ["speaking", "writing", "reading", "listening"],
+            "example": "reading"
+          },
+          "questionType": {
+            "type": "string",
+            "example": "Reading & Writing: Fill in the blanks"
+          },
+          "title": { "type": "string", "example": "Renewable Energy Transitions" },
+          "content": { "type": "string", "example": "Solar energy is becoming increasingly [blank_0] across global markets." },
+          "difficulty": { "type": "string", "enum": ["Easy", "Medium", "Hard"], "example": "Medium" },
+          "expectedAnswer": { "type": "string", "example": "Model essay text or reference transcript" },
+          "expectedAnswers": {
+            "type": "array",
+            "items": { "type": "string" },
+            "example": ["Option A", "Option C"]
+          },
+          "audioUrl": { "type": "string", "example": "http://localhost:5000/uploads/questions/repeat_sentence/sample.mp3" },
+          "imageUrl": { "type": "string", "example": "http://localhost:5000/uploads/questions/describe_image/chart.png" },
+          "keywords": {
+            "type": "array",
+            "items": { "type": "string" },
+            "example": ["increase", "percentage", "trend", "fluctuation"]
+          },
+          "options": {
+            "type": "array",
+            "items": { "type": "string" },
+            "example": ["Option 1", "Option 2", "Option 3", "Option 4"]
+          },
+          "prompt": { "type": "string", "example": "Which statement best summarizes the author's primary argument?" },
+          "blanks": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/BlankItem" }
+          },
+          "distractors": {
+            "type": "array",
+            "items": { "type": "string" },
+            "example": ["irrelevant", "unrelated"]
+          },
+          "paragraphs": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ParagraphItem" }
+          },
+          "correctOrder": {
+            "type": "array",
+            "items": { "type": "string" },
+            "example": ["p2", "p4", "p1", "p3"]
+          },
+          "topicSentenceIndex": { "type": "integer", "example": 0 },
+          "explanation": { "type": "string", "example": "Detailed grammatical and context-based explanation of the passage." },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Attempt": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "661e2f3a4b5c6d7e8f9a0b1c" },
+          "user": { "type": "string", "example": "651a2b3c4d5e6f7a8b9c0d1e" },
+          "question": { "type": "string", "example": "660c1d2e3f4a5b6c7d8e9f01" },
+          "score": { "type": "number", "minimum": 0, "maximum": 90, "example": 78 },
+          "audioUrl": { "type": "string", "example": "http://localhost:5000/uploads/attempts/read_aloud/1712345678_recording.wav" },
+          "details": {
+            "type": "object",
+            "example": {
+              "pronunciationScore": 80,
+              "fluencyScore": 76,
+              "contentScore": 82,
+              "matches": 42,
+              "totalExpected": 48
+            }
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "AnalyticsResponse": {
+        "type": "object",
+        "properties": {
+          "speaking": {
+            "type": "object",
+            "properties": {
+              "totalScore": { "type": "number", "example": 320 },
+              "count": { "type": "integer", "example": 4 },
+              "average": { "type": "number", "example": 80 }
+            }
+          },
+          "writing": {
+            "type": "object",
+            "properties": {
+              "totalScore": { "type": "number", "example": 225 },
+              "count": { "type": "integer", "example": 3 },
+              "average": { "type": "number", "example": 75 }
+            }
+          },
+          "reading": {
+            "type": "object",
+            "properties": {
+              "totalScore": { "type": "number", "example": 450 },
+              "count": { "type": "integer", "example": 6 },
+              "average": { "type": "number", "example": 75 }
+            }
+          },
+          "listening": {
+            "type": "object",
+            "properties": {
+              "totalScore": { "type": "number", "example": 0 },
+              "count": { "type": "integer", "example": 0 },
+              "average": { "type": "number", "example": 0 }
+            }
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": { "type": "string", "format": "date-time" },
+                "score": { "type": "number", "example": 79 },
+                "module": { "type": "string", "example": "speaking" },
+                "questionType": { "type": "string", "example": "Read Aloud" }
+              }
+            }
+          },
+          "progress": {
+            "type": "object",
+            "properties": {
+              "overall": {
+                "type": "object",
+                "properties": {
+                  "totalQuestions": { "type": "integer", "example": 150 },
+                  "practicedQuestions": { "type": "integer", "example": 45 },
+                  "unpracticedQuestions": { "type": "integer", "example": 105 },
+                  "completionRate": { "type": "integer", "example": 30 },
+                  "totalAttempts": { "type": "integer", "example": 68 }
+                }
+              },
+              "byModule": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "total": { "type": "integer" },
+                    "practiced": { "type": "integer" },
+                    "unpracticed": { "type": "integer" },
+                    "completionRate": { "type": "integer" },
+                    "averageScore": { "type": "number" }
+                  }
+                }
+              },
+              "byQuestionType": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "questionType": { "type": "string", "example": "Read Aloud" },
+                    "moduleType": { "type": "string", "example": "speaking" },
+                    "total": { "type": "integer", "example": 25 },
+                    "practiced": { "type": "integer", "example": 10 },
+                    "unpracticed": { "type": "integer", "example": 15 },
+                    "completionRate": { "type": "integer", "example": 40 },
+                    "averageScore": { "type": "number", "example": 82 },
+                    "attemptsCount": { "type": "integer", "example": 18 }
+                  }
+                }
+              },
+              "dailyGoal": {
+                "type": "object",
+                "properties": {
+                  "todayAttempts": { "type": "integer", "example": 7 },
+                  "dailyTarget": { "type": "integer", "example": 15 },
+                  "streakDays": { "type": "integer", "example": 4 },
+                  "targetAchieved": { "type": "boolean", "example": false }
+                }
+              },
+              "readiness": {
+                "type": "object",
+                "properties": {
+                  "totalEvaluated": { "type": "integer", "example": 68 },
+                  "target65Rate": { "type": "integer", "example": 85 },
+                  "target79Rate": { "type": "integer", "example": 62 },
+                  "target65Count": { "type": "integer", "example": 58 },
+                  "target79Count": { "type": "integer", "example": 42 }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string", "example": "Error message description" },
+          "details": { "type": "string", "example": "Optional internal exception message" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Register a new user account",
+        "description": "Registers a new user and returns user info along with a 30-day JWT token.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "email", "password"],
+                "properties": {
+                  "name": { "type": "string", "example": "Alex Taylor" },
+                  "email": { "type": "string", "format": "email", "example": "alex@example.com" },
+                  "password": { "type": "string", "format": "password", "example": "password123" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "User already exists",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Sign in to existing account",
+        "description": "Authenticates user with email and password, returning account details and JWT token.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "format": "email", "example": "alex@example.com" },
+                  "password": { "type": "string", "format": "password", "example": "password123" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/users": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "List all registered users",
+        "description": "Retrieves the full list of users in the system (passwords omitted).",
+        "responses": {
+          "200": {
+            "description": "List of users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/User" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/questions": {
+      "get": {
+        "tags": ["Questions"],
+        "summary": "Fetch questions list with optional filters",
+        "description": "Returns questions sorted by latest first. Can be filtered by PTE module type, question type, or keyword search.",
+        "parameters": [
+          {
+            "name": "moduleType",
+            "in": "query",
+            "description": "PTE Module filter: speaking, writing, reading, or listening",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["speaking", "writing", "reading", "listening"]
+            },
+            "example": "reading"
+          },
+          {
+            "name": "questionType",
+            "in": "query",
+            "description": "Specific question type (e.g., 'Read Aloud', 'Repeat Sentence', 'Describe Image', 'Summarize Written Text', 'Write Essay', 'Reading & Writing: Fill in the blanks', 'Re-order Paragraphs', etc.)",
+            "required": false,
+            "schema": { "type": "string" },
+            "example": "Reading & Writing: Fill in the blanks"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Regex search string matching against title, content, or questionType",
+            "required": false,
+            "schema": { "type": "string" },
+            "example": "energy"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of matching questions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Question" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Questions"],
+        "summary": "Create a new question",
+        "description": "Creates a question in the question bank. Supports multipart/form-data for attaching question audio or prompt images.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["moduleType", "questionType", "content"],
+                "properties": {
+                  "moduleType": {
+                    "type": "string",
+                    "enum": ["speaking", "writing", "reading", "listening"],
+                    "example": "speaking"
+                  },
+                  "questionType": { "type": "string", "example": "Read Aloud" },
+                  "title": { "type": "string", "example": "Renewable Tech Advances" },
+                  "content": { "type": "string", "example": "Electricity produced from renewable resources has expanded dramatically." },
+                  "difficulty": { "type": "string", "enum": ["Easy", "Medium", "Hard"], "example": "Medium" },
+                  "expectedAnswer": { "type": "string", "example": "Reference reading text" },
+                  "keywords": { "type": "string", "description": "Comma separated or JSON array of keywords", "example": "electricity, renewable, expanded" },
+                  "prompt": { "type": "string", "example": "Read the passage aloud as naturally as possible." },
+                  "audio": { "type": "string", "format": "binary", "description": "Audio prompt file (.mp3 / .wav)" },
+                  "image": { "type": "string", "format": "binary", "description": "Image prompt file (.png / .jpg) for Describe Image" }
+                }
+              }
+            },
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Question" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Question successfully created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Question" }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error or invalid data"
+          }
+        }
+      }
+    },
+    "/api/questions/{id}": {
+      "get": {
+        "tags": ["Questions"],
+        "summary": "Get question details by ID",
+        "description": "Returns full details for a single question including blanks, paragraphs, distractors, or media URLs.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Question MongoDB ObjectId",
+            "schema": { "type": "string" },
+            "example": "660c1d2e3f4a5b6c7d8e9f01"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Question found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Question" }
+              }
+            }
+          },
+          "404": {
+            "description": "Question not found"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Questions"],
+        "summary": "Update an existing question",
+        "description": "Updates fields on an existing question by ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Question MongoDB ObjectId",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": { "$ref": "#/components/schemas/Question" }
+            },
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Question" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Question updated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Question" }
+              }
+            }
+          },
+          "404": {
+            "description": "Question not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Questions"],
+        "summary": "Delete a question",
+        "description": "Removes a question from the database by ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Question removed",
+            "content": {
+              "application/json": {
+                "example": { "message": "Question removed" }
+              }
+            }
+          },
+          "404": {
+            "description": "Question not found"
+          }
+        }
+      }
+    },
+    "/api/attempts": {
+      "post": {
+        "tags": ["Attempts & Scoring"],
+        "summary": "Record a new practice attempt",
+        "description": "Saves a user's practice attempt for a specific question. Supports both `application/json` (Writing & Reading questions) and `multipart/form-data` (Speaking questions with audio voice recording attachments uploaded to AWS S3 or local uploads folder).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["user", "question", "score"],
+                "properties": {
+                  "user": {
+                    "type": "string",
+                    "description": "User ObjectId",
+                    "example": "651a2b3c4d5e6f7a8b9c0d1e"
+                  },
+                  "question": {
+                    "type": "string",
+                    "description": "Question ObjectId",
+                    "example": "660c1d2e3f4a5b6c7d8e9f01"
+                  },
+                  "score": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 90,
+                    "description": "Calculated PTE Score (10-90 scale)",
+                    "example": 78
+                  },
+                  "details": {
+                    "type": "string",
+                    "description": "JSON string containing detailed scoring metrics (pronunciationScore, fluencyScore, matches, blankAnswers, wordsAnalysis, etc.)",
+                    "example": "{\"pronunciationScore\":82,\"fluencyScore\":76,\"contentScore\":80,\"matches\":38,\"totalExpected\":42}"
+                  },
+                  "audio": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Recorded audio file (.wav, .mp3, .m4a)"
+                  }
+                }
+              }
+            },
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["user", "question", "score"],
+                "properties": {
+                  "user": { "type": "string", "example": "651a2b3c4d5e6f7a8b9c0d1e" },
+                  "question": { "type": "string", "example": "660c1d2e3f4a5b6c7d8e9f01" },
+                  "score": { "type": "number", "example": 85 },
+                  "details": {
+                    "type": "object",
+                    "example": {
+                      "grammarScore": 85,
+                      "vocabularyScore": 80,
+                      "formScore": 90,
+                      "wordCount": 248,
+                      "submittedText": "The rapid growth of artificial intelligence has reshaped industries..."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Attempt recorded successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Attempt" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid submission payload"
+          }
+        }
+      }
+    },
+    "/api/attempts/user/{userId}": {
+      "get": {
+        "tags": ["Attempts & Scoring"],
+        "summary": "Get all attempts for a user",
+        "description": "Fetches the full attempt history for a specific user, with question details automatically populated.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "User MongoDB ObjectId",
+            "schema": { "type": "string" },
+            "example": "651a2b3c4d5e6f7a8b9c0d1e"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of user attempts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Attempt" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/attempts/user/{userId}/question/{questionId}": {
+      "get": {
+        "tags": ["Attempts & Scoring"],
+        "summary": "Get attempts for a user on a specific question",
+        "description": "Returns past attempts made by a user for a specific question ID, sorted newest to oldest. Used to render past attempts lists and compare improvements.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "651a2b3c4d5e6f7a8b9c0d1e"
+          },
+          {
+            "name": "questionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "660c1d2e3f4a5b6c7d8e9f01"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of question-specific attempts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Attempt" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/attempts/analytics/user/{userId}": {
+      "get": {
+        "tags": ["Analytics & Progress"],
+        "summary": "Get comprehensive analytics and practice progress",
+        "description": "Calculates complete user progress matching AlfaPTE and APEUni standard metrics. Includes: module breakdown (average score, count), question-type completion rates, daily goal streak, target 65+/79+ exam readiness rate, and chronological score history.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "651a2b3c4d5e6f7a8b9c0d1e"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detailed analytics payload",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnalyticsResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/settings/logo": {
+      "get": {
+        "tags": ["Settings & Branding"],
+        "summary": "Get active platform logo",
+        "description": "Returns the active branding logo file (PNG, JPG, SVG) or default system logo.",
+        "responses": {
+          "200": {
+            "description": "Logo image binary file",
+            "content": {
+              "image/png": {},
+              "image/jpeg": {},
+              "image/svg+xml": {}
+            }
+          },
+          "404": {
+            "description": "Logo not found"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Settings & Branding"],
+        "summary": "Upload a new branding logo",
+        "description": "Uploads and updates the organization's logo file, replacing any older logo version.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["logo"],
+                "properties": {
+                  "logo": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Image file (.png, .jpg, .jpeg, .svg)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Logo successfully uploaded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Logo uploaded successfully",
+                  "logoUrl": "http://localhost:5000/api/settings/logo?t=1712345678"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No file uploaded"
+          }
+        }
+      }
+    }
+  }
+}

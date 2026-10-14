@@ -7,6 +7,7 @@ const authRoutes = require('./routes/authRoutes');
 const questionRoutes = require('./routes/questionRoutes');
 const attemptRoutes = require('./routes/attemptRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
+const docsRoutes = require('./routes/docsRoutes');
 
 dotenv.config();
 
@@ -16,6 +17,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Documentation (Scramble / Stoplight Elements, Scalar, Swagger UI, OpenAPI JSON)
+app.use('/docs', docsRoutes);
+app.use('/api-docs', docsRoutes);
 
 // Routes
 app.use('/api/auth', authRoutes);
